@@ -1,0 +1,84 @@
+ {
+ 	"variables": {
+                "ami_id": "ami-6a3b6712",
+                "app_name": "",
+                "aws_vpc": "",
+                "aws_subnet": "",
+                "aws_security_group": ""
+
+ 	},
+
+ 	"builders": [{
+ 		"type": "amazon-ebs",
+		"ami_description": "RHEL-7 Baseline  x86_64 HVM EBS",
+ 		"region": "us-west-2",
+ 		"source_ami": "{{user `ami_id`}}",
+ 		"instance_type": "m4.2xlarge",
+                "associate_public_ip_address": true,
+                "ebs_optimized": true,
+                "ssh_timeout": "30m",
+            	"vpc_id": "{{user `aws_vpc`}}",
+            	"subnet_id": "{{user `aws_subnet`}}",
+		"security_group_id": "{{user `aws_security_group`}}",
+ 		"ssh_username": "ec2-user",
+ 		"communicator": "ssh",
+ 		"ami_name": "PACKER-{{user `app_name` }}-{{user `version`}}",
+ 		"tags": {
+ 			"Name": "PACKER-{{user `app_name` }}",
+ 			"Env": "prod"
+
+ 		},
+                
+		"launch_block_device_mappings": [{
+                        "device_name": "/dev/sda1",
+                        "volume_type": "gp2",
+                        "delete_on_termination": true,
+                        "volume_size": 10
+                }],
+                "ami_block_device_mappings": [{
+                        "device_name": "/dev/sda2",
+                        "volume_type": "gp2",
+                        "delete_on_termination": true,
+                        "volume_size": 50
+                }]
+ 	}],
+
+ 	"provisioners": [{
+ 		"type": "shell",
+ 		"expect_disconnect": true,
+ 		"inline": [
+ 			"sudo yum update -y",
+ 			"sudo yum install git mlocate strace curl wget vim zip git unzip dstat sar jq ruby telnet unzip bind-utils java-1.8.0-openjdk-devel -y",
+     			"sudo wget https://releases.hashicorp.com/consul/1.2.1/consul_1.2.1_linux_amd64.zip",
+                        "sudo wget https://releases.hashicorp.com/consul-template/0.14.0/consul-template_0.14.0_linux_amd64.zip",
+                        "sudo unzip consul_1.2.1_linux_amd64.zip -d /usr/local/bin/",
+                        "sudo unzip consul-template_0.14.0_linux_amd64.zip -d /usr/local/bin/",
+			"sudo wget https://archive.apache.org/dist/storm/apache-storm-0.9.5/apache-storm-0.9.5.zip",
+			"sudo wget http://www-us.apache.org/dist/kafka/1.1.0/kafka_2.11-1.1.0.tgz",
+			"sudo tar -xzvf kafka_2.11-1.1.0.tgz",
+			"sudo mv kafka_2.11-1.1.0 /etc/kafka",
+			"sudo unzip apache-storm-0.9.5.zip ",
+			"sudo mv apache-storm-0.9.5 /etc/apache-storm",
+			"sudo rm -rf /etc/kafka/bin /etc/kafka/conf /etc/kafka/site-docs",
+			"sudo wget http://central.maven.org/maven2/joda-time/joda-time/2.4/joda-time-2.4.jar",
+			"sudo wget http://www.java2s.com/Code/JarDownload/json-simple/json-simple-1.1.jar.zip",
+			"sudo wget http://www.java2s.com/Code/JarDownload/curator-client/curator-client-1.2.4.jar.zip",
+			"sudo wget http://www.java2s.com/Code/JarDownload/curator-framework/curator-framework-1.2.4.jar.zip",
+			"sudo wget https://clojars.org/repo/net/wurstmeister/storm/storm-kafka-0.8-plus/0.4.0/storm-kafka-0.8-plus-0.4.0.jar",
+			"sudo wget http://central.maven.org/maven2/org/apache/storm/storm-kafka/1.0.1/storm-kafka-1.0.1.jar",
+			"sudo mv joda-time-2.4.jar /etc/kafka/libs",
+			"sudo unzip -o curator-client-1.2.4.jar.zip -d /etc/apache-storm/lib/",
+			"sudo unzip -o curator-framework-1.2.4.jar.zip -d /etc/apache-storm/lib/",
+			"sudo unzip -o json-simple-1.1.jar.zip -d /etc/apache-storm/lib/",
+			"sudo mv storm-kafka-1.0.1.jar storm-kafka-0.8-plus-0.4.0.jar /etc/apache-storm/lib/"
+
+                        ]
+                },
+                {
+                        "type": "file",
+                        "source": "../scripts/app.tar.gz",
+                        "destination": "/tmp/app.tar.gz"
+                }
+
+        ]
+}

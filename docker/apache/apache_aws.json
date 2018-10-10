@@ -1,0 +1,32 @@
+ {
+ 	"variables": {
+                "ami_id": "ami-1234567",
+                "app_name": "",
+		"aws_region": "",
+                "aws_vpc": "",
+                "aws_subnet": "",
+                "aws_security_group": ""
+ 	},
+
+ 	"builders": [{
+ 		"type": "amazon-ebs",
+ 		"region": "{{user `aws_region`}}",
+ 		"source_ami": "{{user `ami_id`}}",
+ 		"instance_type": "m4.2xlarge",
+		"associate_public_ip_address": true,
+		"ebs_optimized": true,
+		"ssh_timeout": "30m",
+ 		"vpc_id": "{{user `aws_vpc`}}",
+ 		"subnet_id": "{{user `aws_subnet`}}",
+ 		"security_group_id": "{{user `aws_security_group`}}",
+ 		"ssh_username": "ec2-user",
+ 		"communicator": "ssh",
+ 		"ami_name": "PACKER-{{user `app_name` }}-{{user `version` }}",
+ 		"tags": {
+ 			"Name": "PACKER-{{user `app_name` }}",
+ 			"Env": "prod"
+
+ 		}
+
+ 	}]
+}

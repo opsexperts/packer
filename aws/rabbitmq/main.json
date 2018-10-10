@@ -1,0 +1,78 @@
+ {
+ 	"variables": {
+                "ami_id": "ami-6a3b6712",
+                "app_name": "",
+                "aws_vpc": "",
+                "aws_subnet": "",
+                "aws_security_group": "",
+                "version": ""
+ 	},
+
+ 	"builders": [{
+ 		"type": "amazon-ebs",
+ 		"region": "us-west-2",
+ 		"source_ami": "{{user `ami_id`}}",
+ 		"instance_type": "m4.2xlarge",
+                "associate_public_ip_address": true,
+                "ebs_optimized": true,
+                "ssh_timeout": "30m",
+                "vpc_id": "{{user `aws_vpc`}}",
+                "subnet_id": "{{user `aws_subnet`}}",
+                "security_group_id": "{{user `aws_security_group`}}",
+ 		"ssh_username": "ec2-user",
+ 		"communicator": "ssh",
+ 		"ami_name": "PACKER-{{user `app_name` }}-{{user `version` }}",
+ 		"tags": {
+ 			"Name": "PACKER-{{user `app_name` }}",
+ 			"Env": "prod"
+
+                },
+
+                "launch_block_device_mappings": [{
+                        "device_name": "/dev/sda1",
+                        "volume_type": "gp2",
+                        "delete_on_termination": true,
+                        "volume_size": 10
+                }],
+                "ami_block_device_mappings": [{
+                        "device_name": "/dev/sda2",
+                        "volume_type": "gp2",
+                        "delete_on_termination": true,
+                        "volume_size": 50
+                }]
+ 	}],
+
+         "provisioners": [{
+                "type": "shell",
+                "expect_disconnect": true,
+                "inline": [
+                        "sudo yum update -y",
+                        "sudo yum install curl wget git mlocate strace vim zip unzip dstat jq ruby telnet unzip bind-utils java-1.8.0-openjdk-devel -y",
+			"sudo echo '[erlang-solutions]' > /tmp/erlang.repo",
+			"sudo echo 'name=CentOS $releasever - $basearch - Erlang Solutions' >> /tmp/erlang.repo",
+			"sudo echo 'baseurl=https://packages.erlang-solutions.com/rpm/centos/7/$basearch' >> /tmp/erlang.repo",
+			"sudo echo 'enabled=1' >> /tmp/erlang.repo",
+			"sudo echo 'gpgcheck=1' >> /tmp/erlang.repo",
+			"sudo echo 'gpgkey=https://packages.erlang-solutions.com/rpm/erlang_solutions.asc' >> /tmp/erlang.repo",
+			"sudo cp /tmp/erlang.repo /etc/yum.repos.d/",
+                        "sudo wget https://releases.hashicorp.com/consul/1.2.1/consul_1.2.1_linux_amd64.zip",
+                        "sudo wget https://releases.hashicorp.com/consul-template/0.14.0/consul-template_0.14.0_linux_amd64.zip",
+                        "sudo unzip consul_1.2.1_linux_amd64.zip -d /usr/local/bin/",
+                        "sudo unzip consul-template_0.14.0_linux_amd64.zip -d /usr/local/bin/",
+                        "sudo rpm -ivh http://rpmfind.net/linux/centos/7.5.1804/os/x86_64/Packages/socat-1.7.3.2-2.el7.x86_64.rpm",
+                        "sudo rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm",
+                        "sudo yum -y install erlang",
+			"sudo rm -rf *.zip *.tgz",
+                        "sudo rpm -ivh https://dl.bintray.com/rabbitmq/all/rabbitmq-server/3.7.7/rabbitmq-server-3.7.7-1.el7.noarch.rpm",
+			"sudo echo 'nameserver 127.0.0.1' > /etc/resolv.conf",
+			"sudo echo 'search us-west-2.compute.internal us-west-2.sbg-qbo-prod.a.intuit.com' > /etc/resolv.conf",
+			"sudo echo 'options timeout:4 attempts:2 rotate single-request-reopen' > /etc/resolv.conf"
+                ]
+        },
+                {
+                        "type": "file",
+                        "source": "../scripts/app.tar.gz",
+                        "destination": "/tmp/app.tar.gz"
+                }
+]
+}

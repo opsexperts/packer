@@ -1,0 +1,60 @@
+{
+	"variables": {
+		"ami_id": "ami-6a3b6712",
+		"app_name": "mysql",
+                "aws_vpc": "",
+                "aws_subnet": "",
+                "aws_security_group": ""
+	},
+
+	"builders": [{
+		"type": "amazon-ebs",
+		"region": "us-west-2",
+		"source_ami": "{{user `ami_id`}}",
+		"instance_type": "t2.micro",
+                "vpc_id": "{{user `aws_vpc`}}",
+                "subnet_id": "{{user `aws_subnet`}}",
+                "security_group_id": "{{user `aws_security_group`}}",
+		"ssh_username": "ec2-user",
+		"communicator": "ssh",
+		"ami_name": "PACKER-{{user `app_name` }}",
+		"tags": {
+			"Name": "PACKER-{{user `app_name` }}",
+			"Env": "prod"
+
+		},
+
+                "launch_block_device_mappings": [{
+                        "device_name": "/dev/sda1",
+                        "volume_type": "gp2",
+                        "delete_on_termination": true,
+                        "volume_size": 10
+                }],
+                "ami_block_device_mappings": [{
+                        "device_name": "/dev/sda2",
+                        "volume_type": "gp2",
+                        "delete_on_termination": true,
+                        "volume_size": 50
+                }]
+	}],
+
+	"provisioners": [{
+			"type": "shell",
+			"expect_disconnect": true,
+			"inline": [
+				"sudo yum update -y",
+				"sudo yum install curl wget vim zip unzip dstat git mlocate strace -y",
+				"sudo wget https://releases.hashicorp.com/consul/1.2.1/consul_1.2.1_linux_amd64.zip",
+				"sudo wget https://releases.hashicorp.com/consul-template/0.14.0/consul-template_0.14.0_linux_amd64.zip",
+				"sudo unzip consul_1.2.1_linux_amd64.zip -d /usr/local/bin/",
+				"sudo unzip consul-template_0.14.0_linux_amd64.zip -d /usr/local/bin/"
+			]
+		},
+		{
+			"type": "file",
+			"source": "../scripts/app.tar.gz",
+			"destination": "/tmp/app.tar.gz"
+		}
+
+	]
+}
