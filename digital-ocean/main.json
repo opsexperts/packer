@@ -1,0 +1,14 @@
+{
+  "builders": [{
+      "api_token": "packertestad97d8b9kjhgfd567uacf37ef1d3f3022f61831f8exampletoken",
+      "type": "digitalocean",
+      "region": "sgp1",
+      "image": "ubuntu-16-04-x64",
+      "size": "512mb",
+      "snapshot_name": "ubuntu_zenial-{{timestamp}}",
+      "ssh_username": "root",
+      "private_networking": true,
+      "monitoring": true
+    }]
+}
+

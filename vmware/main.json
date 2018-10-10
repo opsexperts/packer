@@ -1,0 +1,29 @@
+{
+	"variables": {
+		"iso": "http://linuxsoft.cern.ch/centos/7/isos/x86_64/CentOS-7-x86_64-Minimal-1804.iso",
+		"checksum": "714acc0aefb32b7d51b515e25546835e55a90da9fb00417fbee2d03a62801efd"
+	},
+	"builders": [{
+		"type": "virtualbox-iso",
+		"iso_url": "{{ user `iso` }}",
+		"vm_name": "MyCentOS7",
+      		"iso_checksum": "{{ user `checksum` }}",
+      		"iso_checksum_type": "sha256",
+		"guest_os_type": "RedHat_64",
+		"ssh_username": "root",
+		"ssh_password": "packer",
+		"ssh_port": 22,
+		"ssh_wait_timeout": "600s",
+		"vboxmanage": [
+			["modifyvm", "{{.Name}}", "--memory", "2048"],
+			["modifyvm", "{{.Name}}", "--cpus", "2"],
+			["modifyvm", "{{.Name}}", "--audio", "none"]
+		],
+		"disk_size": "10240",
+		"http_directory": "http",
+		"boot_command": [
+			"<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg<enter><wait>"
+		],
+		"shutdown_command": "/sbin/halt -p"
+	}]
+}
